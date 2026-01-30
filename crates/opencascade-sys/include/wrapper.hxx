@@ -86,6 +86,24 @@
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 
+// XCAF Document support
+#include <TDocStd_Document.hxx>
+#include <XCAFApp_Application.hxx>
+#include <XCAFDoc_ColorTool.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+
+// STEP with colors
+#include <STEPCAFControl_Reader.hxx>
+
+// glTF Writer
+#include <Quantity_Color.hxx>
+#include <Quantity_ColorRGBA.hxx>
+#include <RWGltf_CafWriter.hxx>
+#include <RWMesh_CoordinateSystem.hxx>
+#include <TColStd_IndexedDataMapOfStringString.hxx>
+#include <TDF_Label.hxx>
+
 // Generic template constructor
 template <typename T, typename... Args> std::unique_ptr<T> construct_unique(Args... args) {
   return std::unique_ptr<T>(new T(args...));
@@ -112,6 +130,11 @@ typedef opencascade::handle<Geom_CylindricalSurface> HandleGeom_CylindricalSurfa
 typedef opencascade::handle<Poly_Triangulation> HandlePoly_Triangulation;
 typedef opencascade::handle<TopTools_HSequenceOfShape> HandleTopTools_HSequenceOfShape;
 typedef opencascade::handle<Law_Function> HandleLawFunction;
+
+// XCAF Handles
+typedef opencascade::handle<TDocStd_Document> HandleTDocStd_Document;
+typedef opencascade::handle<XCAFDoc_ShapeTool> HandleXCAFDoc_ShapeTool;
+typedef opencascade::handle<XCAFDoc_ColorTool> HandleXCAFDoc_ColorTool;
 
 typedef opencascade::handle<TColgp_HArray1OfPnt> Handle_TColgpHArray1OfPnt;
 
@@ -539,4 +562,72 @@ inline std::unique_ptr<gp_Pnt> Bnd_Box_CornerMax(const Bnd_Box &box) {
 // BRepBndLib
 inline void BRepBndLib_Add(const TopoDS_Shape &shape, Bnd_Box &box, const Standard_Boolean useTriangulation) {
   BRepBndLib::Add(shape, box, useTriangulation);
+}
+
+// === XCAF Document Management ===
+
+inline std::unique_ptr<HandleTDocStd_Document> XCAFApp_NewDocument() {
+  opencascade::handle<TDocStd_Document> doc;
+  XCAFApp_Application::GetApplication()->NewDocument("MDTV-XCAF", doc);
+  return std::unique_ptr<HandleTDocStd_Document>(new HandleTDocStd_Document(doc));
+}
+
+inline HandleXCAFDoc_ShapeTool XCAFDoc_DocumentTool_ShapeTool(const HandleTDocStd_Document &doc) {
+  return XCAFDoc_DocumentTool::ShapeTool((*doc)->Main());
+}
+
+inline HandleXCAFDoc_ColorTool XCAFDoc_DocumentTool_ColorTool(const HandleTDocStd_Document &doc) {
+  return XCAFDoc_DocumentTool::ColorTool((*doc)->Main());
+}
+
+// === XCAF Shape Management ===
+
+inline std::unique_ptr<TDF_Label> XCAFDoc_ShapeTool_AddShape(const HandleXCAFDoc_ShapeTool &tool,
+                                                             const TopoDS_Shape &shape) {
+  return std::unique_ptr<TDF_Label>(new TDF_Label(tool->AddShape(shape)));
+}
+
+// === XCAF Color Management ===
+
+inline void XCAFDoc_ColorTool_SetColor_RGB(const HandleXCAFDoc_ColorTool &tool, const TDF_Label &label, double r,
+                                           double g, double b) {
+  Quantity_Color color(r, g, b, Quantity_TOC_RGB);
+  tool->SetColor(label, color, XCAFDoc_ColorGen);
+}
+
+inline void XCAFDoc_ColorTool_SetColor_RGBA(const HandleXCAFDoc_ColorTool &tool, const TDF_Label &label, double r,
+                                            double g, double b, double a) {
+  Quantity_ColorRGBA color(r, g, b, a);
+  tool->SetColor(label, color, XCAFDoc_ColorGen);
+}
+
+// === STEP Reading (with colors) ===
+
+inline std::unique_ptr<HandleTDocStd_Document> read_step_with_colors(rust::String filename) {
+  opencascade::handle<TDocStd_Document> doc;
+  XCAFApp_Application::GetApplication()->NewDocument("MDTV-XCAF", doc);
+
+  STEPCAFControl_Reader reader;
+  reader.SetColorMode(true);
+  reader.SetNameMode(true);
+  reader.SetLayerMode(true);
+
+  if (reader.ReadFile(filename.c_str()) != IFSelect_RetDone) {
+    return nullptr;
+  }
+
+  if (!reader.Transfer(doc)) {
+    return nullptr;
+  }
+
+  return std::unique_ptr<HandleTDocStd_Document>(new HandleTDocStd_Document(doc));
+}
+
+// === glTF Writing ===
+
+inline bool write_gltf(const HandleTDocStd_Document &doc, rust::String filename, bool is_binary) {
+  TColStd_IndexedDataMapOfStringString metadata;
+  RWGltf_CafWriter writer(filename.c_str(), is_binary);
+  writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(RWMesh_CoordinateSystem_Zup);
+  return writer.Perform(*doc, metadata, Message_ProgressRange());
 }
