@@ -4,6 +4,7 @@ use crate::{
         make_axis_1, make_axis_2, make_dir, make_point, make_point2d, make_vec, BooleanShape,
         Compound, Edge, EdgeIterator, Face, FaceIterator, ShapeType, Shell, Solid, Vertex, Wire,
     },
+    xde::XdeDocument,
     Error,
 };
 use cxx::UniquePtr;
@@ -626,6 +627,52 @@ impl Shape {
         } else {
             Err(Error::StlWriteFailed)
         }
+    }
+
+    /// Write the shape to a glTF file (.gltf with separate .bin).
+    ///
+    /// This is a convenience method that creates a temporary XDE document,
+    /// adds the shape, and exports to glTF. For colored exports, use
+    /// [`XdeDocument`] directly.
+    pub fn write_gltf<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        self.write_gltf_with_tolerance(path, 0.001)
+    }
+
+    /// Write the shape to a binary glTF file (.glb).
+    ///
+    /// This is a convenience method that creates a temporary XDE document,
+    /// adds the shape, and exports to GLB. For colored exports, use
+    /// [`XdeDocument`] directly.
+    pub fn write_glb<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        self.write_glb_with_tolerance(path, 0.001)
+    }
+
+    /// Write the shape to a glTF file with configurable mesh tolerance.
+    pub fn write_gltf_with_tolerance<P: AsRef<Path>>(
+        &self,
+        path: P,
+        triangulation_tolerance: f64,
+    ) -> Result<(), Error> {
+        // Mesh the shape first (required for glTF)
+        let _mesher = Mesher::try_new(self, triangulation_tolerance)?;
+
+        let doc = XdeDocument::new();
+        doc.add_shape(self);
+        doc.write_gltf(path)
+    }
+
+    /// Write the shape to a binary glTF file with configurable mesh tolerance.
+    pub fn write_glb_with_tolerance<P: AsRef<Path>>(
+        &self,
+        path: P,
+        triangulation_tolerance: f64,
+    ) -> Result<(), Error> {
+        // Mesh the shape first (required for glTF)
+        let _mesher = Mesher::try_new(self, triangulation_tolerance)?;
+
+        let doc = XdeDocument::new();
+        doc.add_shape(self);
+        doc.write_glb(path)
     }
 
     #[must_use]
