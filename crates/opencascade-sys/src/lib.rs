@@ -90,6 +90,12 @@ pub mod ffi {
         type HandleTopTools_HSequenceOfShape;
         type HandleLawFunction;
 
+        // XCAF Handles
+        type HandleTDocStd_Document;
+        type HandleXCAFDoc_ShapeTool;
+        type HandleXCAFDoc_ColorTool;
+        type TDF_Label;
+
         type Handle_TColgpHArray1OfPnt;
         pub fn new_HandleTColgpHArray1OfPnt_from_TColgpHArray1OfPnt(
             array: UniquePtr<TColgp_HArray1OfPnt>,
@@ -1232,6 +1238,44 @@ pub mod ffi {
             shape: &TopoDS_Shape,
             filename: String,
         ) -> bool;
+
+        // XCAF Document Management
+        pub fn XCAFApp_NewDocument() -> UniquePtr<HandleTDocStd_Document>;
+        pub fn XCAFDoc_DocumentTool_ShapeTool(
+            doc: &HandleTDocStd_Document,
+        ) -> HandleXCAFDoc_ShapeTool;
+        pub fn XCAFDoc_DocumentTool_ColorTool(
+            doc: &HandleTDocStd_Document,
+        ) -> HandleXCAFDoc_ColorTool;
+
+        // XCAF Shape Management
+        pub fn XCAFDoc_ShapeTool_AddShape(
+            tool: &HandleXCAFDoc_ShapeTool,
+            shape: &TopoDS_Shape,
+        ) -> UniquePtr<TDF_Label>;
+
+        // XCAF Color Management
+        pub fn XCAFDoc_ColorTool_SetColor_RGB(
+            tool: &HandleXCAFDoc_ColorTool,
+            label: &TDF_Label,
+            r: f64,
+            g: f64,
+            b: f64,
+        );
+        pub fn XCAFDoc_ColorTool_SetColor_RGBA(
+            tool: &HandleXCAFDoc_ColorTool,
+            label: &TDF_Label,
+            r: f64,
+            g: f64,
+            b: f64,
+            a: f64,
+        );
+
+        // STEP Reading (with colors)
+        pub fn read_step_with_colors(filename: String) -> UniquePtr<HandleTDocStd_Document>;
+
+        // glTF Writing
+        pub fn write_gltf(doc: &HandleTDocStd_Document, filename: String, is_binary: bool) -> bool;
 
         // Triangulation
         type BRepMesh_IncrementalMesh;
