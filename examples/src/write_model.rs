@@ -23,6 +23,8 @@ enum Format {
     Step,
     Stl,
     Iges,
+    Gltf,
+    Glb,
 }
 
 fn main() {
@@ -42,6 +44,8 @@ fn main() {
         Format::Iges => model.write_iges(args.output).unwrap(),
         Format::Step => model.write_step(args.output).unwrap(),
         Format::Stl => model.write_stl(args.output).unwrap(),
+        Format::Gltf => model.write_gltf(args.output).unwrap(),
+        Format::Glb => model.write_glb(args.output).unwrap(),
     }
 }
 
@@ -50,6 +54,8 @@ fn determine_format(extension: &OsStr) -> Option<Format> {
         b"step" | b"stp" => Some(Format::Step),
         b"stl" => Some(Format::Stl),
         b"iges" | b"igs" => Some(Format::Iges),
+        b"gltf" => Some(Format::Gltf),
+        b"glb" => Some(Format::Glb),
         _ => None,
     }
 }
