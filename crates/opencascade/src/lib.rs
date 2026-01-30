@@ -7,6 +7,7 @@ pub mod mesh;
 pub mod primitives;
 pub mod section;
 pub mod workplane;
+pub mod xde;
 
 mod law_function;
 mod make_pipe_shell;
@@ -25,6 +26,10 @@ pub enum Error {
     StepWriteFailed,
     #[error("failed to write IGES file")]
     IgesWriteFailed,
+    #[error("failed to write glTF file")]
+    GltfWriteFailed,
+    #[error("failed to read STEP file with colors")]
+    StepCafReadFailed,
     #[error("failed to triangulate Shape")]
     TriangulationFailed,
     #[error("encountered a face with no triangulation")]
