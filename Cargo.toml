@@ -16,3 +16,6 @@ resolver = "2"
 # So set the regular release opt-level. `cmake` crate then picks it up and passes to the C++ build.
 [profile.release.package.occt-sys]
 opt-level = 3
+
+[patch.crates-io]
+occt-sys = { path = "crates/occt-sys" }

@@ -111,7 +111,7 @@ impl XdeDocument {
     /// ```
     pub fn add_shape(&self, shape: &Shape) -> ShapeLabel {
         let shape_tool = ffi::XCAFDoc_DocumentTool_ShapeTool(&self.inner);
-        let label = ffi::XCAFDoc_ShapeTool_AddShape(&shape_tool, shape.inner());
+        let label = ffi::XCAFDoc_ShapeTool_AddShape(&shape_tool, &shape.inner);
         ShapeLabel { inner: label }
     }
 

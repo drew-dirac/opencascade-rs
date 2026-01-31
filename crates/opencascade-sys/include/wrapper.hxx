@@ -572,12 +572,14 @@ inline std::unique_ptr<HandleTDocStd_Document> XCAFApp_NewDocument() {
   return std::unique_ptr<HandleTDocStd_Document>(new HandleTDocStd_Document(doc));
 }
 
-inline HandleXCAFDoc_ShapeTool XCAFDoc_DocumentTool_ShapeTool(const HandleTDocStd_Document &doc) {
-  return XCAFDoc_DocumentTool::ShapeTool((*doc)->Main());
+inline std::unique_ptr<HandleXCAFDoc_ShapeTool> XCAFDoc_DocumentTool_ShapeTool(const HandleTDocStd_Document &doc) {
+  return std::unique_ptr<HandleXCAFDoc_ShapeTool>(
+      new HandleXCAFDoc_ShapeTool(XCAFDoc_DocumentTool::ShapeTool(doc->Main())));
 }
 
-inline HandleXCAFDoc_ColorTool XCAFDoc_DocumentTool_ColorTool(const HandleTDocStd_Document &doc) {
-  return XCAFDoc_DocumentTool::ColorTool((*doc)->Main());
+inline std::unique_ptr<HandleXCAFDoc_ColorTool> XCAFDoc_DocumentTool_ColorTool(const HandleTDocStd_Document &doc) {
+  return std::unique_ptr<HandleXCAFDoc_ColorTool>(
+      new HandleXCAFDoc_ColorTool(XCAFDoc_DocumentTool::ColorTool(doc->Main())));
 }
 
 // === XCAF Shape Management ===
@@ -629,5 +631,5 @@ inline bool write_gltf(const HandleTDocStd_Document &doc, rust::String filename,
   TColStd_IndexedDataMapOfStringString metadata;
   RWGltf_CafWriter writer(filename.c_str(), is_binary);
   writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(RWMesh_CoordinateSystem_Zup);
-  return writer.Perform(*doc, metadata, Message_ProgressRange());
+  return writer.Perform(doc, metadata, Message_ProgressRange());
 }

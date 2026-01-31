@@ -1243,10 +1243,10 @@ pub mod ffi {
         pub fn XCAFApp_NewDocument() -> UniquePtr<HandleTDocStd_Document>;
         pub fn XCAFDoc_DocumentTool_ShapeTool(
             doc: &HandleTDocStd_Document,
-        ) -> HandleXCAFDoc_ShapeTool;
+        ) -> UniquePtr<HandleXCAFDoc_ShapeTool>;
         pub fn XCAFDoc_DocumentTool_ColorTool(
             doc: &HandleTDocStd_Document,
-        ) -> HandleXCAFDoc_ColorTool;
+        ) -> UniquePtr<HandleXCAFDoc_ColorTool>;
 
         // XCAF Shape Management
         pub fn XCAFDoc_ShapeTool_AddShape(
